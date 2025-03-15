@@ -1,15 +1,14 @@
 [package]
-name = "my_project_nam"
+name = "mintara"
 version = "1.0.0"
 authors = []
 
 [addresses]
-
-[dev-addresses]
+mintara = "0x9f8921fb6321e1b149ed703766dd1e68977db93f96ad74bb3d02eb1b6d952ba3"
 
 [dependencies.AptosFramework]
 git = "https://github.com/aptos-labs/aptos-core.git"
-rev = "testnet"
+rev = "aptos-framework-v1.0.0"
 subdir = "aptos-move/framework/aptos-framework"
 
 [dev-dependencies]
