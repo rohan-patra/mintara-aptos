@@ -9,7 +9,6 @@ lerna-debug.log*
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
-
 # Runtime data
 pids
 *.pid
@@ -134,3 +133,12 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Aptos specific files
+*/.move/
+*/build/
+
+*.mv
+*.mv.json
+*.mv.lock
+*.mv.cache
