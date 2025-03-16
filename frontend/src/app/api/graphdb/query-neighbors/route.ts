@@ -9,7 +9,6 @@ import { NextResponse } from 'next/server';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Get query parameters
     const searchParams = request.nextUrl.searchParams;
     const rootCid = searchParams.get('rootCid');
     const radiusParam = searchParams.get('radius');
@@ -21,7 +20,6 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // Default radius to 1 if not provided
     const radius = radiusParam ? parseInt(radiusParam, 10) : 1;
     
     if (isNaN(radius) || radius < 1) {
@@ -31,13 +29,10 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // Initialize the Aptos client
     const client = new AptosClient('https://fullnode.devnet.aptoslabs.com/v1');
     
-    // Contract address
     const contractAddress = '0xac202ad8925ededdcc1bfa283818ee9dfae219113356d5f37d6d89ba9f83a937';
     
-    // Private key for the account from environment variable
     const privateKeyHex = process.env.APTOS_PRIVATE_KEY;
     
     if (!privateKeyHex) {
@@ -47,12 +42,10 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // Create an account from the private key to get the account address
     const privateKey = new HexString(privateKeyHex).toUint8Array();
     const account = new AptosAccount(privateKey);
     const accountAddress = account.address().toString();
 
-    // First check if the GraphDB exists by calling exists_graph_db
     const existsPayload: Types.ViewRequest = {
       function: `${contractAddress}::graph_db::exists_graph_db`,
       type_arguments: [],
@@ -70,21 +63,16 @@ export async function GET(request: NextRequest) {
       }, { status: 404 });
     }
 
-    // Call the view function to query neighbors
-    // Use accountAddress as db_owner since that's where the GraphDB is stored
     const payload: Types.ViewRequest = {
       function: `${contractAddress}::graph_db::query_neighbors`,
       type_arguments: [],
       arguments: [accountAddress, rootCid, radius.toString()]
     };
     
-    // Execute the view function
     const response = await client.view(payload);
     
-    // The response is an array of strings (vector<String> in Move)
     const neighbors = response[0] as string[];
     
-    // Return the response
     return NextResponse.json({ 
       success: true, 
       rootCid,

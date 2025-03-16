@@ -6,7 +6,6 @@ import { NextResponse } from 'next/server';
  */
 export async function GET() {
   try {
-    // Private key for the account from environment variable
     const privateKeyHex = process.env.APTOS_PRIVATE_KEY;
     
     if (!privateKeyHex) {
@@ -16,27 +15,21 @@ export async function GET() {
       );
     }
     
-    // Create an account from the private key
     const privateKey = new HexString(privateKeyHex).toUint8Array();
     const account = new AptosAccount(privateKey);
     
-    // Get account address
     const accountAddress = account.address().toString();
     
-    // Contract address (for comparison)
     const contractAddress = '0xf7bd6bcfd99df30871e14572eb9d0e42b10a326011d263ddaf808acc2eaa3448';
     
-    // Initialize the Aptos client
     const client = new AptosClient('https://fullnode.devnet.aptoslabs.com/v1');
     
-    // Check if GraphDB exists at account address
     const accountPayload = {
       function: `${contractAddress}::graph_db::exists_graph_db`,
       type_arguments: [],
       arguments: [accountAddress]
     };
     
-    // Check if GraphDB exists at contract address
     const contractPayload = {
       function: `${contractAddress}::graph_db::exists_graph_db`,
       type_arguments: [],
@@ -51,7 +44,6 @@ export async function GET() {
       accountHasGraphDB = accountResponse[0] as boolean;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_error) {
-      // Ignore error, default is false
     }
     
     try {
@@ -59,7 +51,6 @@ export async function GET() {
       contractHasGraphDB = contractResponse[0] as boolean;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_error) {
-      // Ignore error, default is false
     }
     
     return NextResponse.json({
