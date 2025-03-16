@@ -64,6 +64,7 @@ public entry fun insert_vector(
     vector_db.next_id = vector_db.next_id + 1;
 }
 
+#[view]
 public fun query_similar_vectors(
     db_owner: address,
     query_vector: vector<u64>,
@@ -208,12 +209,14 @@ fun insert_sorted(
     };
 }
 
+#[view]
 public fun get_vector_count(db_owner: address): u64 acquires VectorDB {
     assert!(exists<VectorDB>(db_owner), E_NOT_AUTHORIZED);
     let vector_db = borrow_global<VectorDB>(db_owner);
     vector_db.next_id
 }
 
+#[view]
 public fun exists_vector_db(addr: address): bool {
     exists<VectorDB>(addr)
 }
