@@ -176,7 +176,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-border py-6">
         <div className="container text-center text-sm text-muted-foreground">
-          <p>© 2023 Mentara. Built on Aptos blockchain.</p>
+          <p>© 2025 Mentara. Built on Aptos blockchain.</p>
           <div className="mt-3 flex items-center justify-center space-x-6">
             <a href="#" className="hover:text-secondary">
               Terms
