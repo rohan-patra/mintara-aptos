@@ -24,6 +24,19 @@ if (!fs.existsSync(dataDir)) {
 const TWITTER_USERNAME = process.env.TWITTER_USERNAME;
 const TWITTER_API_KEY = process.env.TWITTER_API_KEY;
 const TWITTER_API_SECRET = process.env.TWITTER_API_SECRET;
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+
+// Hardcoded Aptos token address to respond with
+const APTOS_TOKEN_ADDRESS =
+  "0x123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
+// List of crypto personalities to tag
+const CRYPTO_PERSONALITIES = [
+  "@blknoiz06",
+  "@cz_binance",
+  "@CryptoJack",
+  "@nayibbukele",
+];
 
 // Interface for storing tweet data
 interface StoredTweetData {
@@ -31,6 +44,13 @@ interface StoredTweetData {
   tweets: TweetV2[];
   users: UserV2[];
   lastUpdated: string;
+}
+
+// Interface for meme coin details
+interface MemeCoinDetails {
+  ticker: string;
+  name: string;
+  description: string;
 }
 
 // Default empty state
@@ -51,6 +71,13 @@ if (!TWITTER_USERNAME) {
 if (!TWITTER_API_KEY || !TWITTER_API_SECRET) {
   console.error(
     "Missing TWITTER_API_KEY or TWITTER_API_SECRET environment variables. Please check your .env file."
+  );
+  process.exit(1);
+}
+
+if (!OPENROUTER_API_KEY) {
+  console.error(
+    "Missing OPENROUTER_API_KEY environment variable. Please check your .env file."
   );
   process.exit(1);
 }
@@ -90,6 +117,127 @@ function saveTweetData(data: StoredTweetData) {
     );
   } catch (error) {
     console.error("Error saving tweet data:", error);
+  }
+}
+
+/**
+ * Generates meme coin details based on tweet content using Gemini via OpenRouter
+ */
+async function generateMemeCoinFromTweet(
+  tweetText: string
+): Promise<MemeCoinDetails> {
+  try {
+    console.log(`Generating meme coin from tweet: ${tweetText}`);
+
+    const prompt = `
+      Create a meme cryptocurrency based on this tweet: "${tweetText}"
+      
+      Please generate:
+      1. A creative ticker symbol (3-5 characters)
+      2. A catchy name for the token
+      3. A brief description explaining the token's concept
+      
+      Format your response as JSON with the following structure:
+      {
+        "ticker": "SYMBOL",
+        "name": "Token Name",
+        "description": "Brief description of the token concept"
+      }
+    `;
+
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+          "HTTP-Referer": "https://mintara.xyz",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-1.5-flash",
+          messages: [
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+          response_format: { type: "json_object" },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `OpenRouter API error: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+    console.log(`Generated meme coin data: ${content}`);
+
+    // Parse the JSON response
+    const coinDetails = JSON.parse(content) as MemeCoinDetails;
+
+    // Validate and sanitize the response
+    return {
+      ticker: (coinDetails.ticker || "MEME").toUpperCase().slice(0, 5),
+      name: coinDetails.name || "Meme Coin",
+      description: coinDetails.description || "A new meme cryptocurrency",
+    };
+  } catch (error) {
+    console.error("Error generating meme coin:", error);
+
+    // Return fallback values if generation fails
+    return {
+      ticker: "MEME",
+      name: "Default Meme Coin",
+      description: "A cryptocurrency based on trending memes",
+    };
+  }
+}
+
+/**
+ * Respond to a tweet with meme coin details
+ */
+async function respondToTweet(
+  client: TwitterApi["readOnly"],
+  tweetId: string,
+  coinDetails: MemeCoinDetails
+) {
+  try {
+    // Create a tweet client that can write
+    const appOnlyClient = new TwitterApi(
+      await getTwitterBearerToken(TWITTER_API_KEY!, TWITTER_API_SECRET!)
+    );
+
+    const tweetText = `🚀 Just created $${coinDetails.ticker} - ${
+      coinDetails.name
+    }!
+    
+${coinDetails.description}
+
+Mint now on Aptos: ${APTOS_TOKEN_ADDRESS}
+
+${CRYPTO_PERSONALITIES.join(" ")}`;
+
+    console.log(`Preparing to tweet: ${tweetText}`);
+
+    // Note: In a real implementation, you would use a user-authenticated client
+    // We can't actually post tweets with an app-only client - this requires user auth
+    console.log(`Would reply to tweet ${tweetId} with: ${tweetText}`);
+
+    /*
+    // Example of how this would work with a user-authenticated client:
+    const response = await userAuthenticatedClient.v2.reply(
+      tweetText,
+      tweetId
+    );
+    console.log(`Posted reply: ${response.data.id}`);
+    */
+  } catch (error) {
+    console.error("Error responding to tweet:", error);
   }
 }
 
@@ -164,6 +312,46 @@ function findTweetById(
   tweetId: string
 ): TweetV2 | undefined {
   return tweets.find((tweet) => tweet.id === tweetId);
+}
+
+/**
+ * Find users interested in a specific token using the Vector DB
+ * Returns an array of user IDs
+ */
+async function findInterestedUsers(
+  coinDetails: MemeCoinDetails
+): Promise<string[]> {
+  // This function is commented out as requested, but shows the implementation
+  /*
+  try {
+    // Generate a query based on the coin details
+    const query = `${coinDetails.name} ${coinDetails.description} ${coinDetails.ticker} cryptocurrency token`;
+    
+    // Call the vectordb API to find similar vectors
+    const response = await fetch('http://localhost:3000/api/vectordb/query-similar', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        topK: 5
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Vector DB API error: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return data.similarVectors || [];
+  } catch (error) {
+    console.error("Error finding interested users:", error);
+    return [];
+  }
+  */
+
+  return [];
 }
 
 async function listenForMentions(client: TwitterApi["readOnly"]) {
@@ -308,6 +496,22 @@ async function listenForMentions(client: TwitterApi["readOnly"]) {
                 console.log(
                   `Parent URL: https://twitter.com/${parentUsername}/status/${parentTweet.id}`
                 );
+
+                // Generate meme coin from parent tweet content
+                const coinDetails = await generateMemeCoinFromTweet(
+                  parentTweet.text
+                );
+                console.log("Generated Meme Coin:", coinDetails);
+
+                // Find users who might be interested in this token
+                /* 
+                // This would call the vector DB API to find similar users
+                const interestedUsers = await findInterestedUsers(coinDetails);
+                console.log(`Found ${interestedUsers.length} potentially interested users`);
+                */
+
+                // Respond to the original tweet with the meme coin details
+                await respondToTweet(client, tweet.id, coinDetails);
               } else {
                 console.log(
                   "Parent tweet referenced but not included in response. ID:",
@@ -347,6 +551,22 @@ async function listenForMentions(client: TwitterApi["readOnly"]) {
                     console.log(
                       `Parent URL: https://twitter.com/${parentUsername}/status/${parentTweet.id}`
                     );
+
+                    // Generate meme coin from parent tweet content
+                    const coinDetails = await generateMemeCoinFromTweet(
+                      parentTweet.text
+                    );
+                    console.log("Generated Meme Coin:", coinDetails);
+
+                    // Find users who might be interested in this token
+                    /*
+                    // This would call the vector DB API to find similar users
+                    const interestedUsers = await findInterestedUsers(coinDetails);
+                    console.log(`Found ${interestedUsers.length} potentially interested users`);
+                    */
+
+                    // Respond to the original tweet with the meme coin details
+                    await respondToTweet(client, tweet.id, coinDetails);
                   }
                 } catch (fetchError) {
                   console.error("Error fetching parent tweet:", fetchError);
@@ -359,6 +579,20 @@ async function listenForMentions(client: TwitterApi["readOnly"]) {
             console.log(
               "No parent tweet found - this is likely a direct mention, not a reply"
             );
+
+            // If no parent tweet, use the mention itself to generate a meme coin
+            const coinDetails = await generateMemeCoinFromTweet(tweet.text);
+            console.log("Generated Meme Coin from mention:", coinDetails);
+
+            // Find users who might be interested in this token
+            /*
+            // This would call the vector DB API to find similar users
+            const interestedUsers = await findInterestedUsers(coinDetails);
+            console.log(`Found ${interestedUsers.length} potentially interested users`);
+            */
+
+            // Respond to the mention with the meme coin details
+            await respondToTweet(client, tweet.id, coinDetails);
           }
 
           console.log("---");

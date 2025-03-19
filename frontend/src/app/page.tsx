@@ -1,12 +1,12 @@
-import { Ticker, sampleTickerEvents } from "@/components/Ticker";
+import { Ticker } from "@/components/Ticker";
 import {
   TokenCard,
   sampleTokens,
   type TokenData,
 } from "@/components/TokenCard";
 import { KingOfTheHill } from "@/components/KingOfTheHill";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { WalletConnect } from "@/components/WalletConnect";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { StatusBadge } from "@/components/StatusBadge";
 
@@ -41,9 +41,7 @@ export default function HomePage() {
 
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <Button variant="outline" size="sm">
-              Connect Wallet
-            </Button>
+            <WalletConnect />
             <Button size="sm">
               <svg
                 xmlns="http://www.w3.org/2000/svg"

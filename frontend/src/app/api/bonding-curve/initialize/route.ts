@@ -1,95 +1,127 @@
-import { AptosClient, AptosAccount, HexString, Types, TxnBuilderTypes } from 'aptos';
-import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
+import {
+  AptosClient,
+  AptosAccount,
+  HexString,
+  type Types,
+  type TxnBuilderTypes,
+} from "aptos";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+
+interface TransactionInfo {
+  success?: boolean;
+  vm_status?: string;
+  gas_used?: string;
+  [key: string]: unknown;
+}
 
 /**
- * API endpoint to initialize the bonding curve contract
- * This requires a POST request with a JSON body containing token name, symbol, base price, and price increment
+ * API endpoint to initialize the bonding curve with a new token
+ * This creates a new token with the specified parameters and sets up the bonding curve
  */
 export async function POST(request: NextRequest) {
   try {
     // Parse the request body
-    const body = await request.json() as { 
+    const body = (await request.json()) as {
       tokenName: string;
       tokenSymbol: string;
-      basePrice: number;
-      priceIncrement: number;
+      basePrice?: string | number;
+      priceIncrement?: string | number;
       moduleAddress?: string;
     };
-    
-    const { tokenName, tokenSymbol, basePrice, priceIncrement, moduleAddress } = body;
-    
+
+    const {
+      tokenName,
+      tokenSymbol,
+      basePrice: rawBasePrice,
+      priceIncrement: rawPriceIncrement,
+      moduleAddress,
+    } = body;
+
     if (!tokenName || !tokenSymbol) {
       return NextResponse.json(
-        { success: false, error: 'Token name and symbol are required' },
-        { status: 400 }
+        { success: false, error: "Token name and symbol are required" },
+        { status: 400 },
       );
     }
-    
-    if (basePrice <= 0 || priceIncrement <= 0) {
-      return NextResponse.json(
-        { success: false, error: 'Base price and price increment must be positive numbers' },
-        { status: 400 }
-      );
-    }
-    
+
+    // Parse the price parameters as numbers
+    const basePrice =
+      typeof rawBasePrice === "string"
+        ? parseInt(rawBasePrice, 10)
+        : typeof rawBasePrice === "number"
+          ? rawBasePrice
+          : 1000000; // Default to 0.01 APT
+
+    const priceIncrement =
+      typeof rawPriceIncrement === "string"
+        ? parseInt(rawPriceIncrement, 10)
+        : typeof rawPriceIncrement === "number"
+          ? rawPriceIncrement
+          : 100000; // Default to 0.001 APT
+
     // Initialize the Aptos client (using devnet for this example)
-    const client = new AptosClient('https://fullnode.devnet.aptoslabs.com/v1');
-    
-    // Get the bonding curve contract address from request, env, or use a default
-    const contractAddress = moduleAddress || process.env.BONDING_CURVE_MODULE_ADDRESS || 
-      '0xf15a9be44d5a140c69702d2bce3260aeb176bf878ef59bc19703b20a31bcd4c2';
-    
+    const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1");
+
+    // Get the bonding curve contract address from query params, env or use a default
+    const contractAddress =
+      moduleAddress ??
+      process.env.BONDING_CURVE_ADDRESS ??
+      "0xf15a9be44d5a140c69702d2bce3260aeb176bf878ef59bc19703b20a31bcd4c2";
+
+    console.log("Contract address:", contractAddress);
+
     // Private key for the account that will sign the transaction
     const privateKeyHex = process.env.APTOS_PRIVATE_KEY;
-    
+
     if (!privateKeyHex) {
       return NextResponse.json(
-        { success: false, error: 'Private key not configured' },
-        { status: 500 }
+        { success: false, error: "Private key not configured" },
+        { status: 500 },
       );
     }
-    
+
     // Create an account from the private key
     const privateKey = new HexString(privateKeyHex).toUint8Array();
     const account = new AptosAccount(privateKey);
-    
+    const accountAddress = account.address().hex();
+
+    console.log("Account address:", accountAddress);
+
     // Check if the module exists
     try {
       await client.getAccountModule(contractAddress, "bonding_curve");
     } catch (error) {
-      return NextResponse.json({
-        success: false,
-        error: "Bonding curve module not found at the specified address. Please deploy the contract first.",
-        deploymentInstructions: {
-          step1: "Compile the Move contract: aptos move compile --named-addresses mintara=<your_address>",
-          step2: "Deploy the Move contract as an object: aptos move deploy-object --address-name mintara",
-          step3: "After deployment, use the contract address in your API calls",
-          notes: "Replace <your_address> with your actual account address"
-        }
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Bonding curve module not found at the specified address. Please deploy the contract first.",
+          deploymentInstructions: {
+            step1:
+              "Compile the Move contract: aptos move compile --named-addresses mintara=<your_address>",
+            step2:
+              "Deploy the Move contract: aptos move publish --named-addresses mintara=<your_address>",
+            notes: "Replace <your_address> with your actual account address",
+          },
+        },
+        { status: 404 },
+      );
     }
 
-    // Verify this account is the module deployer (mintara address) since initialize is restricted
-    const accountAddr = account.address().hex();
-    
+    // Get information about the module if needed
     try {
-      // Get the account module to check if it's the mintara address
-      const moduleInfo = await client.getAccountModule(contractAddress, "bonding_curve");
-      
-      // This is a simple check - in production, verify address more rigorously
-      console.log(`Account address: ${accountAddr}`);
-      console.log(`Module address: ${contractAddress}`);
-      
-      // Let user know they may need proper permissions
-      if (accountAddr !== contractAddress) {
-        console.log("Warning: The initializing account may not be the module deployer.");
-      }
-    } catch (error) {
-      console.error("Error checking module deployer:", error);
+      const moduleInfo = await client.getAccountModule(
+        contractAddress,
+        "bonding_curve",
+      );
+      // You can use this to check if the module is properly deployed
+    } catch {
+      // Module not found, but we already checked above
     }
 
-    // Create a transaction payload to call the initialize function
+    // Payload for the initialization
+    // Note: The exact function signature might vary based on your contract
     const payload = {
       function: `${contractAddress}::bonding_curve::initialize`,
       type_arguments: [],
@@ -97,82 +129,120 @@ export async function POST(request: NextRequest) {
         tokenName,
         tokenSymbol,
         basePrice.toString(),
-        priceIncrement.toString()
-      ]
+        priceIncrement.toString(),
+      ],
     };
-    
-    console.log("Initialize payload:", JSON.stringify(payload, null, 2));
-    console.log("Using signer account:", account.address().hex());
-    console.log("Target contract address:", contractAddress);
-    
+
+    console.log(
+      "Initializing bonding curve with payload:",
+      JSON.stringify(payload),
+    );
+
     // Build and submit the transaction
     const rawTxn = await client.generateTransaction(account.address(), payload);
+    console.log("Raw transaction generated");
+
     const signedTxn = await client.signTransaction(account, rawTxn);
+    console.log("Transaction signed");
+
     const txnResult = await client.submitTransaction(signedTxn);
-    
-    // Wait for the transaction to complete
-    await client.waitForTransaction(txnResult.hash);
-    
-    // Attempt to get the resource account address
-    let resourceAddress = null;
+    console.log("Transaction submitted with hash:", txnResult.hash);
+
+    // Wait for transaction to be processed
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // Check transaction status
     try {
+      const txnInfo = (await client.getTransactionByHash(
+        txnResult.hash,
+      )) as TransactionInfo;
+      const isSuccess =
+        txnInfo && typeof txnInfo.success === "boolean"
+          ? txnInfo.success
+          : false;
+
+      console.log("Transaction status:", isSuccess ? "Success" : "Failed");
+
+      if (!isSuccess) {
+        console.error("Transaction failed:", txnInfo.vm_status);
+
+        return NextResponse.json(
+          {
+            success: false,
+            transactionHash: txnResult.hash,
+            error: txnInfo.vm_status,
+            message:
+              "Initialization failed. The bonding curve might already be initialized.",
+            explorer: `https://explorer.aptoslabs.com/txn/${txnResult.hash}?network=devnet`,
+          },
+          { status: 400 },
+        );
+      }
+
+      // Try to get the resource address
       try {
         const viewRequest: Types.ViewRequest = {
           function: `${contractAddress}::bonding_curve::get_resource_address_view`,
           type_arguments: [],
-          arguments: []
+          arguments: [],
         };
+
         const response = await client.view(viewRequest);
         if (response && response.length > 0) {
-          resourceAddress = response[0] as string;
-          console.log("Resource account address:", resourceAddress);
+          const resourceAddress = response[0] as string;
+
+          return NextResponse.json({
+            success: true,
+            transactionHash: txnResult.hash,
+            contractAddress,
+            resourceAddress,
+            tokenName,
+            tokenSymbol,
+            basePrice,
+            priceIncrement,
+            message: "Bonding curve initialized successfully",
+            explorer: `https://explorer.aptoslabs.com/txn/${txnResult.hash}?network=devnet`,
+          });
         }
       } catch (error) {
-        console.log("Could not get resource address from view function");
+        console.warn("Could not get resource address:", error);
       }
+
+      return NextResponse.json({
+        success: true,
+        transactionHash: txnResult.hash,
+        contractAddress,
+        tokenName,
+        tokenSymbol,
+        basePrice,
+        priceIncrement,
+        message:
+          "Bonding curve initialized successfully (resource address unknown)",
+        explorer: `https://explorer.aptoslabs.com/txn/${txnResult.hash}?network=devnet`,
+      });
     } catch (error) {
-      console.error("Error getting resource address:", error);
+      console.error("Error checking transaction:", error);
+
+      return NextResponse.json(
+        {
+          success: false,
+          transactionHash: txnResult.hash,
+          error: error instanceof Error ? error.message : "Unknown error",
+          message: "Error while checking transaction status",
+          explorer: `https://explorer.aptoslabs.com/txn/${txnResult.hash}?network=devnet`,
+        },
+        { status: 500 },
+      );
     }
-    
-    return NextResponse.json({
-      success: true,
-      transactionHash: txnResult.hash,
-      tokenName,
-      tokenSymbol,
-      basePrice,
-      priceIncrement,
-      admin: accountAddr,
-      resourceAddress,
-      message: 'Bonding curve initialized successfully'
-    });
   } catch (error) {
-    console.error('Error initializing bonding curve:', error);
-    
-    // Check for common errors
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
-    if (errorMessage.includes("E_UNAUTHORIZED")) {
-      return NextResponse.json({
-        success: false,
-        error: "Unauthorized: Only the module owner (@mintara) can initialize the bonding curve",
-        details: errorMessage
-      }, { status: 403 });
-    }
-    
-    if (errorMessage.includes("E_ALREADY_INITIALIZED")) {
-      return NextResponse.json({
-        success: false,
-        error: "The bonding curve has already been initialized",
-        details: errorMessage
-      }, { status: 400 });
-    }
-    
+    console.error("Error initializing bonding curve:", error);
+
     return NextResponse.json(
-      { 
-        success: false, 
-        error: errorMessage
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

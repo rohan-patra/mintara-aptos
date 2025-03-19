@@ -107,7 +107,7 @@ export function KingOfTheHill({ token, className }: KingOfTheHillProps) {
         </div>
 
         <p className="mt-4 text-xs text-muted-foreground">
-          Launched by AI Agent from @{token.tweetAuthor}'s tweet
+          Launched by AI Agent from @{token.tweetAuthor}&apos;s tweet
         </p>
       </CardContent>
     </Card>

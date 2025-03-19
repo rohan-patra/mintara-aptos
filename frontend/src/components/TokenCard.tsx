@@ -75,7 +75,7 @@ export function TokenCard({
         </div>
         <div className="mt-3 border-t border-border pt-3">
           <p className="text-xs text-muted-foreground">
-            Launched by AI Agent from @{token.tweetAuthor}'s tweet
+            Launched by AI Agent from @{token.tweetAuthor}&apos;s tweet
           </p>
         </div>
       </CardContent>
