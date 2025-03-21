@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 export interface TokenData {
   id: string;
@@ -80,26 +81,33 @@ export function TokenCard({
         </div>
       </CardContent>
       <CardFooter className="flex gap-2 p-4 pt-0">
-        <Button className="w-full" variant="default" size="sm">
-          Buy
-        </Button>
-        <Button variant="outline" size="sm" className="flex-shrink-0">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="mr-2"
-          >
-            <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
-          </svg>
-          View Tweet
-        </Button>
+        <Link href={`/token/${token.id}`} className="w-full">
+          <Button className="w-full" variant="default" size="sm">
+            Buy
+          </Button>
+        </Link>
+        <Link
+          href={`https://x.com/anyuser/status/${token.tweetId}`}
+          target="_blank"
+        >
+          <Button variant="outline" size="sm" className="flex-shrink-0">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="mr-2"
+            >
+              <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
+            </svg>
+            View Tweet
+          </Button>
+        </Link>
       </CardFooter>
     </Card>
   );
@@ -166,5 +174,17 @@ export const sampleTokens: TokenData[] = [
     tweetId: "5467812390",
     tweetAuthor: "nvidia",
     launchedAt: new Date(Date.now() - 3600000 * 18), // 18 hours ago
+  },
+  {
+    id: "6",
+    symbol: "GROK",
+    name: "Grok Token",
+    price: 0.0001,
+    change24h: 10.0,
+    volume24h: 100000,
+    marketCap: 1000000,
+    tweetId: "1898801860397457799",
+    tweetAuthor: "grok",
+    launchedAt: new Date(Date.now() - 3600000 * 24), // 24 hours ago
   },
 ];
