@@ -26,6 +26,10 @@ export default {
           "0%": { transform: "translateX(0%)" },
           "100%": { transform: "translateX(-100%)" },
         },
+        marquee2: {
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(0%)" },
+        },
         "king-pulse": {
           "0%, 100%": { transform: "scale(1)" },
           "50%": { transform: "scale(1.05)" },
@@ -33,6 +37,7 @@ export default {
       },
       animation: {
         marquee: "marquee 25s linear infinite",
+        marquee2: "marquee2 25s linear infinite",
         "king-pulse": "king-pulse 2s ease-in-out infinite",
       },
       colors: {

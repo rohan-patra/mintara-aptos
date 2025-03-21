@@ -15,12 +15,14 @@ interface TickerProps {
   events?: TickerEvent[];
   tokens: TokenData[];
   className?: string;
+  speed?: "slow" | "normal" | "fast";
 }
 
 export function Ticker({
   events: providedEvents,
   tokens,
   className,
+  speed = "normal",
 }: TickerProps) {
   const events = useMemo(() => {
     if (providedEvents && providedEvents.length > 0) {
@@ -66,6 +68,55 @@ export function Ticker({
 
   if (!events.length) return null;
 
+  // Get animation speed class based on the speed prop
+  const getSpeedClass = () => {
+    switch (speed) {
+      case "slow":
+        return "animate-[marquee_40s_linear_infinite]";
+      case "fast":
+        return "animate-[marquee_15s_linear_infinite]";
+      case "normal":
+      default:
+        return "animate-marquee";
+    }
+  };
+
+  const getSpeedClass2 = () => {
+    switch (speed) {
+      case "slow":
+        return "animate-[marquee2_40s_linear_infinite]";
+      case "fast":
+        return "animate-[marquee2_15s_linear_infinite]";
+      case "normal":
+      default:
+        return "animate-marquee2";
+    }
+  };
+
+  // Create the ticker items
+  const renderTickerItems = () => {
+    return events.map((event, i) => (
+      <React.Fragment key={event.id}>
+        <div className="mx-4 inline-flex items-center text-sm">
+          {event.type === "new_coin" ? (
+            <>
+              <span className="mr-2 font-bold text-secondary">🚀 NEW COIN</span>
+              <span>{event.message}</span>
+            </>
+          ) : (
+            <>
+              <span className="mr-2 font-bold">👤 NEW TRADE</span>
+              <span>{event.message}</span>
+            </>
+          )}
+        </div>
+        {i < events.length - 1 && (
+          <span className="mx-2 text-muted-foreground">•</span>
+        )}
+      </React.Fragment>
+    ));
+  };
+
   return (
     <div
       className={cn(
@@ -73,29 +124,24 @@ export function Ticker({
         className,
       )}
     >
-      <div className="animate-marquee flex items-center whitespace-nowrap">
-        {events.map((event, i) => (
-          <React.Fragment key={event.id}>
-            <div className="mx-4 inline-flex items-center text-sm">
-              {event.type === "new_coin" ? (
-                <>
-                  <span className="mr-2 font-bold text-secondary">
-                    🚀 NEW COIN
-                  </span>
-                  <span>{event.message}</span>
-                </>
-              ) : (
-                <>
-                  <span className="mr-2 font-bold">👤 NEW TRADE</span>
-                  <span>{event.message}</span>
-                </>
-              )}
-            </div>
-            {i < events.length - 1 && (
-              <span className="mx-2 text-muted-foreground">•</span>
-            )}
-          </React.Fragment>
-        ))}
+      <div className="relative flex overflow-x-hidden">
+        <div
+          className={cn(
+            "flex items-center whitespace-nowrap py-1",
+            getSpeedClass(),
+          )}
+        >
+          {renderTickerItems()}
+        </div>
+
+        <div
+          className={cn(
+            "absolute top-0 flex items-center whitespace-nowrap py-1",
+            getSpeedClass2(),
+          )}
+        >
+          {renderTickerItems()}
+        </div>
       </div>
     </div>
   );

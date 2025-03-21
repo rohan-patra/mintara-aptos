@@ -55,8 +55,7 @@ export async function GET(request: NextRequest) {
     let isInitialization = false;
     if (
       txnInfo.payload?.type === "entry_function_payload" &&
-      txnInfo.payload?.function &&
-      txnInfo.payload.function.includes("::bonding_curve::initialize")
+      txnInfo.payload?.function?.includes("::bonding_curve::initialize")
     ) {
       isInitialization = true;
     }
