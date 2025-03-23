@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { WalletProvider } from "@/components/WalletProvider";
 
 export const metadata: Metadata = {
-  title: "Mentara - AI-Powered Tokenization",
+  title: "Mintara - AI-Powered Tokenization",
   description: "Tag an AI agent under any tweet to launch a token",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };

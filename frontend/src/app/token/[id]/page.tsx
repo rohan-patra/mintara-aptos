@@ -44,7 +44,7 @@ export default function TokenPage() {
       <header className="sticky top-0 z-10 border-b border-border bg-background">
         <div className="container flex items-center justify-between px-4 py-3 md:px-6">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-secondary">Mentara</h1>
+            <h1 className="text-2xl font-bold text-secondary">Mintara</h1>
             <span className="text-sm text-muted-foreground">on Aptos</span>
             <StatusBadge online={true} className="ml-2" />
           </div>
@@ -262,7 +262,7 @@ export default function TokenPage() {
                   </div>
                   <p className="mt-2 text-sm">
                     This is a sample tweet that led to the creation of the{" "}
-                    {token.name} token. #AI #Crypto #Mentara
+                    {token.name} token. #AI #Crypto #Mintara
                   </p>
                   <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
                     <span>💬 24</span>
@@ -277,7 +277,7 @@ export default function TokenPage() {
                       asChild
                     >
                       <a
-                        href={`https://twitter.com/${token.tweetAuthor}/status/${token.tweetId}`}
+                        href={`https://twitter.com/anyuser/status/${token.tweetId}`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -449,7 +449,7 @@ export default function TokenPage() {
             <div className="mt-4 flex flex-col gap-2">
               <Button className="w-full" size="sm" variant="outline" asChild>
                 <a
-                  href={`https://twitter.com/intent/tweet?text=I&apos;m checking out the ${token.symbol} token on Mentara! 🚀&url=https://mintara.xyz/token/${token.id}`}
+                  href={`https://twitter.com/intent/tweet?text=I&apos;m checking out the ${token.symbol} token on Mintara! 🚀&url=https://mintara.xyz/token/${token.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -492,7 +492,7 @@ export default function TokenPage() {
       {/* Footer */}
       <footer className="border-t border-border py-6">
         <div className="container text-center text-sm text-muted-foreground">
-          <p>© 2025 Mentara. Built on Aptos blockchain.</p>
+          <p>© 2025 Mintara. Built on Aptos blockchain.</p>
           <div className="mt-3 flex items-center justify-center space-x-6">
             <a href="#" className="hover:text-secondary">
               Terms

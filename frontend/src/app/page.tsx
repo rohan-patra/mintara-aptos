@@ -35,7 +35,7 @@ export default function HomePage() {
       <header className="sticky top-0 z-10 border-b border-border bg-background">
         <div className="container flex items-center justify-between px-4 py-3 md:px-6">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-secondary">Mentara</h1>
+            <h1 className="text-2xl font-bold text-secondary">Mintara</h1>
             <span className="text-sm text-muted-foreground">on Aptos</span>
             <StatusBadge online={true} className="ml-2" />
           </div>
@@ -110,7 +110,7 @@ export default function HomePage() {
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                   1
                 </span>
-                <span>Tag the Mentara AI agent under any tweet</span>
+                <span>Tag the Mintara AI agent under any tweet</span>
               </li>
               <li className="flex gap-3">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
@@ -160,7 +160,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-border py-6">
         <div className="container text-center text-sm text-muted-foreground">
-          <p>© 2025 Mentara. Built on Aptos blockchain.</p>
+          <p>© 2025 Mintara. Built on Aptos blockchain.</p>
           <div className="mt-3 flex items-center justify-center space-x-6">
             <a href="#" className="hover:text-secondary">
               Terms
